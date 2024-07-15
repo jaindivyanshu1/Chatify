@@ -28,7 +28,7 @@ class AuthProvider extends ChangeNotifier{
       print("LoggedIn");
     }catch(e){
       status = AuthStatus.Error;
-      print('Error');
+      print('Error done');
     }
     notifyListeners();
   }

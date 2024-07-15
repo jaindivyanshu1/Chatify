@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">YOUR_WEB_CLIENT_ID</string>
+    <string name="firebase_database_url" translatable="false">YOUR_DATABASE_URL</string>
+    <string name="gcm_defaultSenderId" translatable="false">YOUR_SENDER_ID</string>
+    <string name="google_api_key" translatable="false">AIzaSyCJuB6vtnZiKPjAcoMDX0elyc0sU-3ug5U</string>
+    <string name="google_app_id" translatable="false">1:71235690809:android:e8e6ecb326218d9573c8e8</string>
+    <string name="google_crash_reporting_api_key" translatable="false">YOUR_CRASH_REPORTING_API_KEY</string>
+    <string name="project_id" translatable="false">chartify-76d98</string>
+</resources>

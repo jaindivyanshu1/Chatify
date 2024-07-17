@@ -1,8 +1,9 @@
+import 'package:chartify/services/snackbar_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 
-enum AuthStatus{
+enum AuthStatus {
   NotAuthenticated,
   Authenticating,
   Authenticated,
@@ -10,27 +11,32 @@ enum AuthStatus{
   Error,
 }
 
-class AuthProvider extends ChangeNotifier{
+class AuthProvider extends ChangeNotifier {
   late User user;
-  late AuthStatus status;
+  late AuthStatus status = AuthStatus.NotAuthenticated;
   late FirebaseAuth _auth = FirebaseAuth.instance;
   static AuthProvider instance = AuthProvider();
-  AuthProvider(){
+  AuthProvider() {
     _auth = FirebaseAuth.instance;
   }
   void loginUserWithEmailAndPassword(String _email, String _password) async {
     status = AuthStatus.Authenticating;
     notifyListeners();
-    try{
-      UserCredential _result = await _auth.signInWithEmailAndPassword(email: _email, password: _password);
+    try {
+      UserCredential _result = await _auth.signInWithEmailAndPassword(
+          email: _email, password: _password);
       user = _result.user!;
       status = AuthStatus.Authenticated;
+      SnackbarService.instance.showSnackBarMethod('LoggedIn');
       print("LoggedIn");
-    }catch(e){
+    } catch (e) {
       status = AuthStatus.Error;
+      SnackbarService.instance.showSnackBarMethod(
+        'Error',
+        isError: true,
+      );
       print('Error done');
     }
     notifyListeners();
   }
 }
-

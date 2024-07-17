@@ -1,4 +1,6 @@
 import 'package:chartify/provider/auth_provider.dart';
+import 'package:chartify/services/navigation_service.dart';
+import 'package:chartify/services/snackbar_service.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +13,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _needToShowLodder = false;
   late AuthProvider _auth;
   late double _deviceHeight;
   late double _deviceWidth;
@@ -35,6 +38,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _loginPageUI() {
     return Builder(
         builder:(BuildContext _context){
+          SnackbarService.instance.buildContext = _context;
           _auth = Provider.of<AuthProvider>(_context);
           return Container(
             padding: EdgeInsets.symmetric(horizontal: _deviceWidth*0.10),
@@ -61,8 +65,8 @@ class _LoginPageState extends State<LoginPage> {
     return Container(
       height: _deviceHeight * 0.12,
       child: Column(
-        mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
@@ -82,8 +86,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _inputTextForm() {
-    return Container(
-      height: _deviceHeight * 0.16,
+    return SingleChildScrollView(
+      // height: _deviceHeight * 0.16,
       child: Form(
         key: _formKey,
         onChanged: () {
@@ -95,6 +99,7 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _emailTextField(),
+            SizedBox(height: 16,),
             _passwordTextField(),
           ],
         ),
@@ -128,17 +133,17 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       autocorrect: false,
       obscureText: true,
-      style: TextStyle(color: Colors.black),
+      style: const TextStyle(color: Colors.black),
       validator: (input) {
         return (input!=null && input.isNotEmpty) ? null : "Please enter password";
       },
-      onSaved: (_input) {
+      onSaved: (input) {
         setState(() {
-          _userPassword = _input!;
+          _userPassword = input!;
         });
       },
       cursorColor: Colors.black,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         hintText: 'Password',
         focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.black),
@@ -147,17 +152,21 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
   Widget _loginButton(){
-    return Container(
+    return _auth.status == AuthStatus.Authenticating ? Center(child: SizedBox(width: 100, child: const LinearProgressIndicator())) : Container(
       height: _deviceHeight*0.06,
       width: _deviceWidth,
       child: MaterialButton(
         onPressed: () {
           if(_formKey.currentState!.validate()){
             _auth.loginUserWithEmailAndPassword(_userEmail, _userPassword);
+            if(_auth.status == AuthStatus.Authenticating){
+              _needToShowLodder = true;
+            }
+
           }
         },
         color: Colors.blue,
-        child: Text(
+        child: const Text(
           'Login',
           style: TextStyle(
             color: Colors.white,
@@ -169,14 +178,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
   Widget _registerButton(){
-    return GestureDetector(
+    return _auth.status==AuthStatus.Authenticating ? const Center() : GestureDetector(
       onTap: (){
-        print('Okay');
+        NavigationService.instance.navigationTo("register");
         },
-      child: Container(
+      child: SizedBox(
         height: _deviceHeight*0.06,
         width: _deviceWidth,
-        child: Text(
+        child: const Text(
           'Register',
           textAlign: TextAlign.center,
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),

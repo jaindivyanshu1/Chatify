@@ -15,6 +15,10 @@ class NavigationService {
     return navigatorKey.currentState!.pushNamed(routeName);
   }
 
+  Future<dynamic> navigationToReplacement(String routeName){
+    return navigatorKey.currentState!.pushReplacementNamed(routeName);
+  }
+
   Future<dynamic> navigationToRoute(MaterialPageRoute route){
     return navigatorKey.currentState!.push(route);
   }

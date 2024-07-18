@@ -1,13 +1,15 @@
 import 'dart:io';
 
+import 'package:chartify/services/cloud_storage_service.dart';
+import 'package:chartify/services/database_service.dart';
 import 'package:chartify/services/media_service.dart';
 import 'package:chartify/services/navigation_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:chartify/providers/auth_providers.dart';
 
-import '../provider/auth_provider.dart';
+import '../services/snackbar_service.dart';
+
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -21,6 +23,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
   late double _deviceHeight;
   late double _deviceWidth;
   late GlobalKey<FormState> _globalKey;
+  late AuthProviders _authProviders;
+  late String _name;
+  late String _email;
+  late String _password;
   File? _image;
   _RegistrationPageState(){
     _globalKey = GlobalKey<FormState>();
@@ -34,26 +40,31 @@ class _RegistrationPageState extends State<RegistrationPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
         alignment: Alignment.center,
-        child: signpPageUI(),
+        child: ChangeNotifierProvider<AuthProviders>.value(value: AuthProviders.instance, child: signpPageUI()),
       ),
     );
   }
   Widget signpPageUI(){
-    return Container(
-      height: _deviceHeight * 0.80,
-      // color: Colors.red,
-      padding: EdgeInsets.symmetric(horizontal: _deviceWidth*0.10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _headingWidget(),
-          _inputForm(),
-          _registerButton(),
-          _backToLoginPageButton(),
-        ],
-      ),
+    return Builder(
+      builder: (BuildContext context) {
+        _authProviders = Provider.of<AuthProviders>(context);
+        return Container(
+          height: _deviceHeight * 0.80,
+          // color: Colors.red,
+          padding: EdgeInsets.symmetric(horizontal: _deviceWidth*0.10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _headingWidget(),
+              _inputForm(),
+              _registerButton(),
+              _backToLoginPageButton(),
+            ],
+          ),
+        );
+      }
     );
   }
   Widget _headingWidget() {
@@ -112,7 +123,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         onTap: () async {
           File? imageFile = await MediaService.instance.getImageFromLibrary();
           setState(() {
-            _image = imageFile;
+            _image = imageFile!;
           });
         },
         child: Container(
@@ -124,7 +135,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             // border: Border.all(color: Colors.blue),
             image: DecorationImage(
               fit: BoxFit.cover,
-              image: _image != null ? FileImage(_image!) : NetworkImage("https://static.vecteezy.com/system/resources/previews/025/463/773/non_2x/hacker-logo-design-a-mysterious-and-dangerous-hacker-illustration-vector.jpg"),
+              image: _image != null ? FileImage(_image!) : const NetworkImage("https://static.vecteezy.com/system/resources/previews/025/463/773/non_2x/hacker-logo-design-a-mysterious-and-dangerous-hacker-illustration-vector.jpg")as ImageProvider,
             )
           ),
         ),
@@ -140,7 +151,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         return (input!=null && input.isNotEmpty) ? null : "Please enter the valid name";
       },
       onSaved: (input) {
-        setState(() {});
+        setState(() {
+          _name=input!;
+        });
       },
       cursorColor: Colors.black,
       decoration: const InputDecoration(
@@ -160,7 +173,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         return (input!=null && input.isNotEmpty && input.contains('@')) ? null : "Please enter the valid email";
       },
       onSaved: (input) {
-        setState(() {});
+        setState(() {
+          _email=input!;
+        });
       },
       cursorColor: Colors.black,
       decoration: const InputDecoration(
@@ -181,7 +196,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         return (input!=null && input.isNotEmpty) ? null : "Please enter password";
       },
       onSaved: (input) {
-        setState(() {});
+        setState(() {
+          _password = input!;
+        });
       },
       cursorColor: Colors.black,
       decoration: const InputDecoration(
@@ -194,11 +211,37 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Widget _registerButton(){
-    return Container(
+    return _authProviders.status == AuthStatus.Authenticating
+        ? Center(child: SizedBox(width: 100, child: const LinearProgressIndicator()))
+        : Container(
       height: _deviceHeight*0.06,
       width: _deviceWidth,
       child: MaterialButton(
-        onPressed: () {},
+        onPressed: () async {
+        //   if(_globalKey.currentState!.validate() && _image!=null){
+        //     _authProviders.registerUserWithAndPassword(_email, _password, (String uid) async {
+        //       var result = await CloudStorageService.instance.uploadUserImage(uid, _image);
+        //       var imageURL = await result?.ref.getDownloadURL();
+        //       await DatabaseService.instance.createUserInDb(uid, _name, _email, imageURL!);
+        //     });
+        //   }
+        // },
+          if (_globalKey.currentState!.validate() && _image != null) {
+            _authProviders.registerUserWithAndPassword(_email, _password,
+                    (String uid) async {
+                  String? imageURL = await CloudStorageService.instance
+                      .uploadUserImage(uid, _image!);
+                  if (imageURL != null) {
+                    await DatabaseService.instance
+                        .createUserInDb(uid, _name, _email, imageURL);
+                  } else {
+                    SnackbarService.instance.showSnackBarMethod(
+                        'Error uploading image',
+                        isError: true);
+                  }
+                });
+          }
+        },
         color: Colors.blue,
         child: const Text(
           'Register',

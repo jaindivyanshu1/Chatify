@@ -1,9 +1,10 @@
-import 'package:chartify/provider/auth_provider.dart';
+
 import 'package:chartify/services/navigation_service.dart';
 import 'package:chartify/services/snackbar_service.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/auth_providers.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +15,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _needToShowLodder = false;
-  late AuthProvider _auth;
+  late AuthProviders _auth;
   late double _deviceHeight;
   late double _deviceWidth;
   late String _userEmail;
@@ -30,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Align(
         alignment: Alignment.center,
-        child: ChangeNotifierProvider<AuthProvider>.value(value: AuthProvider.instance, child: _loginPageUI(),),
+        child: ChangeNotifierProvider<AuthProviders>.value(value: AuthProviders.instance, child: _loginPageUI(),),
       ),
     );
   }
@@ -39,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
     return Builder(
         builder:(BuildContext _context){
           SnackbarService.instance.buildContext = _context;
-          _auth = Provider.of<AuthProvider>(_context);
+          _auth = Provider.of<AuthProviders>(_context);
           return Container(
             padding: EdgeInsets.symmetric(horizontal: _deviceWidth*0.10),
             height: _deviceHeight * 0.6,
